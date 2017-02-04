@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
+from mysql.connector import errors
 
 config={
     'user':"root",
@@ -8,22 +9,19 @@ config={
     'database':'git',   
 }
 
-class InsertionError(Exception):
-    def __init__():
-        pass
-
 class data():
 
     add_user_info = ("INSERT INTO userinfo"
-        "(id,login,avatar,name,email,location,bio,public_repos,public_gists,followers,following,created_at)"
-        "VALUES ('%(id)s','%(login)s','%(avatar)s','%(name)s','%(email)s','%(location)s','%(bio)s','%(public_repos)s','%(public_gists)s','%(followers)s','%(following)s','%(created_at)s')"
+        "(id,login,avatar_url,name,email,location,bio,public_repos,public_gists,followers,following,created_at)"
+        "VALUES (\"%(id)s\",\"%(login)s\",\"%(avatar_url)s\",\"%(name)s\",\"%(email)s\",\"%(location)s\",\"%(bio)s\",\"%(public_repos)s\""
+        ",\"%(public_gists)s\",\"%(followers)s\",\"%(following)s\",\"%(created_at)s\")"
         )
     add_following = ("INSERT INTO following"
-        "(userid,followingid)"
-        "VALUES ('%(userid)s','%(followingid)s')")
-    add_follower  = ("INSERT INTO followers"
-        "userid,followerid"
-        "VALUES ('%(userid)s','%(followerid)s')")
+        "(userid,followingid) "
+        "VALUES (\"%(userid)s\",\"%(followingid)s\")")
+    add_follower  = ("INSERT INTO follower"
+        "(userid,followerid) "
+        "VALUES (\"%(userid)s\",\"%(followerid)s\")")
     find_user = ("SELECT login,id FROM userinfo where login='%s'")
     TYPE = ('userinfo','following','follower')
 
@@ -38,24 +36,28 @@ class data():
                 print("Database does not exist")
             else:
                 print(err)
+        else:
+            print('Connection to mysql success!')
 
     def insert(self,type,**data):
-        if type in TYPE:
+        if type not in self.TYPE:
             return false
         try:
             if type == 'userinfo':
-                self.cursor.execute(add_user_info,data)
+                self.cursor.execute((self.add_user_info%data).replace("'","''"))
+            #Here replace method is used to convert character ' in words like "i'm" to "i''m" which is right escape character for mysql SYNTAX
             elif type == 'following':
-                self.cursor.execute(add_following,data)
+                self.cursor.execute((self.add_following%data).replace("'","''"))
             elif type == 'follower':
-                self.cursor.execute(add_follower,data)
-        except:
-            raise InsertionError;
-            pass
+                self.cursor.execute((self.add_follower%data).replace("'","''"))
+        except errors.IntegrityError: 
+            print('username exist!')
+        else:
+            self.cnx.commit()
 
     def recorded(self,username):
-        self.cursor.execute(find_user,username)
-        return bool(self.cursor.fetch_all)
+        self.cursor.execute(self.find_user%username)
+        return bool(self.cursor.fetchall())
 
     def delete(self,):
         pass
@@ -81,7 +83,7 @@ def mysql_init():
         "CREATE TABLE userinfo ("
         " id varchar(20) NOT NULL,"
         " login varchar(50) NOT NULL,"
-        " avatar varchar(100),"
+        " avatar_url varchar(100),"
         " name varchar(50),"
         " email varchar(100),"
         " location varchar(200),"
@@ -96,14 +98,14 @@ def mysql_init():
 
     TABLES['following']=(
         "CREATE TABLE following ( "
-        " userid varchar(20) NOT NULL, "
-        " followingid varchar(20) NOT NULL"
+        " userid varchar(50) NOT NULL, "
+        " followingid varchar(50) NOT NULL"
         ")ENGINE=InnoDB" )
 
     TABLES['follower']=(
         "CREATE TABLE follower ("
-        " userid varchar(20) NOT NULL,"
-        " followerid varchar(20) NOT NULL"
+        " userid varchar(50) NOT NULL,"
+        " followerid varchar(50) NOT NULL"
         ")ENGINE=InnoDB" )
 
     cursor = cnx.cursor()
