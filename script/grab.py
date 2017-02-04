@@ -1,5 +1,3 @@
-token = 'dd4688cbde955455c6483ead085956f6fdbb99d1'
-
 import requests
 import time
 
@@ -8,10 +6,10 @@ class UserDoesNotExist(Exception):
         pass
 
 class git(object):
-    header = {"Authorization":"token dd4688cbde955455c6483ead085956f6fdbb99d1"}
     url = "https://api.github.com/"
     
-    def __init__(self,username):
+    def __init__(self,username,token):
+        self.header  = {"Authorization":"token "+token}
         self.username = username
         res = requests.get(self.url+"users/"+username,headers=self.header)
         if res.status_code is not 200:

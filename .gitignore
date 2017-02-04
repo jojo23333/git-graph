@@ -1,1 +1,4 @@
-/__pycache__
+/script/__pycache__
+*.log
+/script/backup
+.token

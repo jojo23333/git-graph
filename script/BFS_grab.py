@@ -57,7 +57,7 @@ def BFS_grab(user):
         username = userlist.get()
         try:
             begin=time.time()
-            user = git(username)
+            user = git(username,token)
 
             if user.followers_pages > 30:
                 userlist.put(x)
@@ -91,6 +91,10 @@ def BFS_grab(user):
                     userset.add(x)
             logging.info("User:{}'s information collected.".format(username))
 
+#Create your own .token file containing your token
+t = open(".token","r")
+token = t.readline().strip('\n')
+t.close()
 
 BFS_grab('jojo23333')
 
