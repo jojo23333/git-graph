@@ -1,10 +1,10 @@
 from mysql_api import mysql_init,config,data
 from grab import git,UserDoesNotExist
 from datetime import date
+from collections import deque
 import logging
 import traceback
 import time
-import queue
 
 mysql_init()
 sql = data()
@@ -21,8 +21,6 @@ formatter = logging.Formatter('%(levelname)-8s %(message)s')
 console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
-userlist = queue.Queue()
-keyuserlist = queue.Queue()
 userset = set()
 errorlog = open('Error.log',"a")
 backup = open('backup','w')
@@ -52,15 +50,14 @@ def write_info(infolist,following,followers):
 
 
 def BFS_grab(user):
-    userlist.put(user)
     while not userlist.empty():
-        username = userlist.get()
+        username = userlist.popleft()
         try:
             begin=time.time()
             user = git(username,token)
 
             if user.followers_pages > 30:
-                userlist.put(x)
+                userlist.append(x)
                 logging.info("%s ignored."%username)
                 continue
             #priority for not_key_position users.Query for than 10000 followers consume great amount of time
@@ -74,7 +71,12 @@ def BFS_grab(user):
             
             logging.info(str(time.time()-begin)+'s')
         except UserDoesNotExist:
-            logging.warning("User {} does not exist!".format(username))
+            logging.warning("User {} does not exist or token is invalid!".format(username))
+        except KeyboardInterrupt:
+            s = open("save","w")
+            s.write(str(list(userlist))+'\n'+str(list(keyuserlist))+str(userset))
+            s.close()
+            break
         except Exception:
             errorlog.write(str(time.asctime(time.localtime(time.time())))+":"+'\n')
             traceback.print_exc(file=errorlog)
@@ -84,10 +86,10 @@ def BFS_grab(user):
             logging.info('pending time :%f'%user.gap())
             time.sleep(user.gap())
             #This is used to avoid api rating limit exceeded
-            for x in following or followers:
-                if x not in userset or sql.recorded(x):
+            for x in following:
+                if x not in userset and sql.recorded(x)!=True:
             #Judge if the user's info is grabbed 
-                    userlist.put(x)
+                    userlist.append(x)
                     userset.add(x)
             logging.info("User:{}'s information collected.".format(username))
 
@@ -95,6 +97,11 @@ def BFS_grab(user):
 t = open(".token","r")
 token = t.readline().strip('\n')
 t.close()
+
+t = open("save","r")
+userlist = deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
+keyuserlist= deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
+userset= set([x for x in t.readline().strip("{'}\n").split("'") x!=", "])
 
 BFS_grab('jojo23333')
 

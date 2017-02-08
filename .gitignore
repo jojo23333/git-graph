@@ -1,4 +1,5 @@
 /script/__pycache__
 *.log
 /script/backup
+/script/test.py
 .token
