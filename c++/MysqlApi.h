@@ -2,7 +2,7 @@
 jojoli
 2017-02-09  
 ***************************/
-#include "mysql_connection.h"
+#include <mysql_connection.h>
 #include "graph.h"
 
 #include <cppconn/driver.h>
@@ -11,45 +11,49 @@ jojoli
 #include <cppconn/statement.h>
 #include <boost/scoped_ptr.hpp>
 
-using namespcae std;
 
 string user="root";
 string pass="li83916386";
-string url="127.0.0.1";
+string url="tcp://127.0.0.1:3306";
 string database="git";
 
-sql::Connection *connect(user=user,pass=pass,url=url)
-{
-	sql::Driver * driver = sql::mysql::get_driver_instance();
-		/* Using the Driver to create a connection */
-	return driver->connect(url, user, pass);
-} 
+//sql::Connection *connect(user=user,pass=pass,url=url)
+//{
+//	sql::Driver * driver = sql::mysql::get_driver_instance();
+//		/* Using the Driver to create a connection */
+//	return driver->connect(url, user, pass);
+//} 
 
-bool get_data()
-{
-	try{
-		boost::scoped_ptr< sql::Connection > con(connect());
-		/* Creating a "simple" statement - "simple" = not a prepared statement */
-		boost::scoped_ptr< sql::Statement > stmt(con->createStatement());
-		
-	}
-}
+//bool get_data()
+//{
+//	try{
+//		boost::scoped_ptr< sql::Connection > con(connect());
+//		/* Creating a "simple" statement - "simple" = not a prepared statement */
+//		boost::scoped_ptr< sql::Statement > stmt(con->createStatement());
+//		
+//	}
+//}
+using namespace std;
 
 class mysql_api{
 	sql::Driver * driver;
 	sql::Connection * con;
 	sql::Statement * stmt;
 	public:
-		mysql_api(user=user,pass=pass,url=url)
+		mysql_api(string user=user,string pass=pass,string url=url)
 		{
 			try{
+				cout<<"init"<<endl; 
 				driver = sql::mysql::get_driver_instance();
+				cout<<"init"<<endl;
 				//using the driver to create a connection
-				con = driver->connect(url, user, pass);
+				con = driver->connect("tcp://127.0.0.1:3306", "root", "li83916386");
+				cout<<"connect success!"<<endl;
 				stmt = con->createStatement();
 				stmt->execute("USE " + database);
 			}
 			catch (sql::SQLException &e) {
+				cout<<"error"<<endl;
 				/*
 				The MySQL Connector/C++ throws three different exceptions:
 		
@@ -58,19 +62,22 @@ class mysql_api{
 				- sql::SQLException (derived from std::runtime_error)
 				*/
 				cout << "# ERR: SQLException in " << __FILE__;
-				cout << "(" << EXAMPLE_FUNCTION << ") on line " << __LINE__ << endl;
+				cout <<"on line " << __LINE__ << endl;
 				/* Use what() (derived from std::runtime_error) to fetch the error message */
 				cout << "# ERR: " << e.what();
 				cout << " (MySQL error code: " << e.getErrorCode();
 				cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 				cout << "not ok 1 - examples/connect.php" << endl;
-				con = stmt = NULL;
+				con = NULL; 
+				stmt = NULL;
 			} catch (std::runtime_error &e) {
+				cout<<"error"<<endl;
 				cout << "# ERR: runtime_error in " << __FILE__;
-				cout << "(" << EXAMPLE_FUNCTION << ") on line " << __LINE__ << endl;
+				cout << " on line " << __LINE__ << endl;
 				cout << "# ERR: " << e.what() << endl;
 				cout << "not ok 1 - examples/connect.php" << endl;
-				con = stmt = NULL;
+				con = NULL;
+				stmt = NULL;
 			}
 		}
 		
@@ -79,16 +86,18 @@ class mysql_api{
 			if(!stmt)delete stmt;
 		}
 		
-		uint_32 write_user(graph *g);
+		uint32_t write_user(graph *g);
 		//write all the user in the database into graph's user vector
 		//return total amount of user
-		uint_32 write_following(graph *g,string username);
-		uint_32 write_follower(graph *g,string username);
+		uint32_t write_following(graph *g,string username);
+		uint32_t write_follower(graph *g,string username);
 		//write a single user's followers and followings
 		//return total amount
+		bool write_all(graph &g);
+		//this method rewrite graph from database
 }; 
 
-uint_32 mysql_api::write_user(graph *p)
+uint32_t mysql_api::write_user(graph *g)
 {
 	boost::scoped_ptr< sql::ResultSet > res(stmt->executeQuery("SELECT * from userinfo"));
 	//automatically free res
@@ -111,13 +120,13 @@ uint_32 mysql_api::write_user(graph *p)
 		info.created_at = res->getString("created_at");
 		//read from mysql
 		
-		p->adduser(info);
+		g->adduser(info);
 		//**deal with failure
 	}
 	return rows;
 }
 
-uint_32 mysql_api::write_following(graph *p,string username)
+uint32_t mysql_api::write_following(graph *p,string username)
 {
 	boost::scoped_ptr< sql::ResultSet > res(stmt->executeQuery(\
 		string("SELECT * from following where userid ='")+ username + string("'")));
@@ -131,7 +140,7 @@ uint_32 mysql_api::write_following(graph *p,string username)
 	return rows;
 }
 
-uint_32 mysql_api::write_follower(graph *p,string username)
+uint32_t mysql_api::write_follower(graph *p,string username)
 {
 	boost::scoped_ptr< sql::ResultSet > res(stmt->executeQuery(\
 		string("SELECT * from follower where userid ='")+ username + string("'")));
@@ -143,4 +152,15 @@ uint_32 mysql_api::write_follower(graph *p,string username)
 		p->addfollower(username,followerid);
 	}
 	return rows; 
+}
+
+bool mysql_api::write_all(graph &g)
+{
+	write_user(&g);
+	for(map<string,GitUser>::iterator it = g.index.begin();it!=g.index.end();it++)
+	//for every user add their edges
+	{
+		write_following(&g,it->first);
+		write_follower(&g,it->first);
+	}
 }
