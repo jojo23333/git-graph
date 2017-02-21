@@ -3,6 +3,6 @@
 /script/backup
 /script/test.py
 .token
-.dev
-.gml
-.win
+*.dev
+*.gml
+*.win
