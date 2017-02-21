@@ -16,10 +16,10 @@ class PageRank{
 		bool map_reduce();
 		
 	public:
-		PageRank(graph &g);
+		PageRank(gitgraph &g);
 };
 
-PageRank::PageRank(graph &g)
+PageRank::PageRank(gitgraph &g)
 {
 	map<string,GitUser>::iterator it = g.index.begin();
 	size_t t = g.index.size();

@@ -65,16 +65,16 @@ int fill_buffer(FILE *stream)
     return 1;
   }
   length = strlen(line) + 1;
-  first = malloc(sizeof(LINE));
-  first->str = malloc(length*sizeof(char));
+  first = (LINE*)malloc(sizeof(LINE));
+  first->str = (char *)malloc(length*sizeof(char));
   strcpy(first->str,line);
 
   previous = first;
   while (read_line(stream,line)==0) {
     length = strlen(line) + 1;
-    previous->ptr = malloc(sizeof(LINE));
+    previous->ptr = (LINE*)malloc(sizeof(LINE));
     previous = previous->ptr;
-    previous->str = malloc(length*sizeof(char));
+    previous->str = (char *)malloc(length*sizeof(char));
     strcpy(previous->str,line);
   }
   previous->ptr = NULL;          // Indicates last line
@@ -155,8 +155,9 @@ int count_vertices()
 
   reset_buffer();
 
+  //Here Defines how to locate a node
   while (next_line(line)==0) {
-    ptr = strstr(line,"node [");
+    ptr = strstr(line,"node");
     if (ptr!=NULL) {
       ptr = strstr(line,"label");
       if (ptr==NULL) result++;
@@ -199,7 +200,7 @@ void create_network(NETWORK *network)
 
   // Make space for the vertices
 
-  network->vertex = calloc(network->nvertices,sizeof(VERTEX));
+  network->vertex = (VERTEX*)calloc(network->nvertices,sizeof(VERTEX));
 
   // Go through the file reading the details of each vertex one by one
 
@@ -234,7 +235,7 @@ void create_network(NETWORK *network)
 	  else length = stop - start;
 	  strncpy(label,start,length);
 	  label[length] = '\0';
-	  network->vertex[i].label = malloc((length+1)*sizeof(char));
+	  network->vertex[i].label = (char *)malloc((length+1)*sizeof(char));
 	  strcpy(network->vertex[i].label,label);
 	}
       }
@@ -250,7 +251,7 @@ void create_network(NETWORK *network)
   // Sort the vertices in increasing order of their IDs so we can find them
   // quickly later
 
-  qsort(network->vertex,network->nvertices,sizeof(VERTEX),(void*)cmpid);
+  qsort(network->vertex,network->nvertices,sizeof(VERTEX),(int(*)(const void*,const void*))cmpid);
 }
 
 
@@ -352,9 +353,9 @@ void read_edges(NETWORK *network)
   // at each vertex
 
   for (i=0; i<network->nvertices; i++) {
-    network->vertex[i].edge = malloc(network->vertex[i].degree*sizeof(EDGE));
+    network->vertex[i].edge = (EDGE*)malloc(network->vertex[i].degree*sizeof(EDGE));
   }
-  count = calloc(network->nvertices,sizeof(int));
+  count = (int *)calloc(network->nvertices,sizeof(int));
 
   // Read in the data
 

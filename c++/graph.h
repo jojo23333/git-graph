@@ -50,15 +50,15 @@ class GitUser{
 		}
 };
 
-class graph{
+class gitgraph{
 	public:
 		map<string,GitUser> index;
 		//map is used to map username to its index in vector
 		
 	public:
 		bool adduser(GitUser::Info info);
-		bool isfollowing(string userid,string followid);
-		bool isfollower(string userid,string follwerid);
+		bool isfollowing(string userid,string followingid);
+		bool isfollower(string userid,string followerid);
 		bool addfollowing(string userid,string followingid);
 		bool addfollower(string userid,string followerid);
 		GitUser* getallusers();
@@ -69,7 +69,7 @@ class graph{
 		}
 };
 
-bool graph::adduser(GitUser::Info userinfo)
+bool gitgraph::adduser(GitUser::Info userinfo)
 {
 	if(index.count(userinfo.username)>0)
 		return false;
@@ -79,7 +79,7 @@ bool graph::adduser(GitUser::Info userinfo)
 }
 
 //is following return true else return false
-bool graph::isfollowing(string userid,string followingid)
+bool gitgraph::isfollowing(string userid,string followingid)
 {
 	vector<Follow> &it = index[userid].following;
 	for(int i=0;i<it.size();i++)
@@ -90,7 +90,7 @@ bool graph::isfollowing(string userid,string followingid)
 	return false;
 }
 
-bool graph::isfollower(string userid,string followerid)
+bool gitgraph::isfollower(string userid,string followerid)
 {
 	vector<Follow> &it = index[userid].followers;
 	for(int i=0;i<it.size();i++)
@@ -102,7 +102,7 @@ bool graph::isfollower(string userid,string followerid)
 }
 
 //user following
-bool graph::addfollowing(string userid,string followingid)
+bool gitgraph::addfollowing(string userid,string followingid)
 {
 	//if user and the user he follows aready exist in graph
 	if(index.count(userid) && index.count(followingid))
@@ -119,7 +119,7 @@ bool graph::addfollowing(string userid,string followingid)
 
 
 //user followed
-bool graph::addfollower(string userid,string followerid)
+bool gitgraph::addfollower(string userid,string followerid)
 {
 	//if user and the user he follows aready exist in graph
 	if(index.count(userid) && index.count(followerid))

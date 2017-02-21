@@ -49,7 +49,7 @@ def write_info(infolist,following,followers):
     backup.write('followers:'+str(followers)+'\n')
 
 
-def BFS_grab(user):
+def BFS_grab():
     while not userlist.empty():
         username = userlist.popleft()
         try:
@@ -74,7 +74,7 @@ def BFS_grab(user):
             logging.warning("User {} does not exist or token is invalid!".format(username))
         except KeyboardInterrupt:
             s = open("save","w")
-            s.write(str(list(userlist))+'\n'+str(list(keyuserlist))+str(userset))
+            s.write(str(list(userlist))+'\n'+str(list(keyuserlist))+'\n'+str(userset))
             s.close()
             break
         except Exception:
@@ -103,7 +103,7 @@ userlist = deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
 keyuserlist= deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
 userset= set([x for x in t.readline().strip("{'}\n").split("'") x!=", "])
 
-BFS_grab('jojo23333')
+BFS_grab()
 
 
 
