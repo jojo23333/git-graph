@@ -26,6 +26,8 @@ errorlog = open('Error.log',"a")
 backup = open('backup','w')
 #ignoredlist = open('Ignoredlist','w')
 
+
+#Write info into mysql and files
 def write_info(infolist,following,followers):
     stored_keys = ['id','login','avatar_url','name','email','location','bio','public_repos',
     'public_gists','followers','following','created_at']
@@ -98,6 +100,7 @@ t = open(".token","r")
 token = t.readline().strip('\n')
 t.close()
 
+#Read init informations from file
 t = open("save","r")
 userlist = deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
 keyuserlist= deque([x for x in t.readline().strip("[']\n").split("'") x!=", "])
