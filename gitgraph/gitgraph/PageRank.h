@@ -4,7 +4,7 @@
 using namespace std;
 
 class PageRank {
-private:
+public:
 	//record pr value 
 	map<string, double> val;
 	//record each user's income edge

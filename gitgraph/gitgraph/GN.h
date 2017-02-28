@@ -25,6 +25,8 @@ class GN {
 	}Best_Q;
 	__declspec(noinline) double delete_max_betweeness();
 	int connected_component();
+	int connected_component_getf(int v);
+	bool betweeness_init();
 	bool check_connectivity();
 public:
 	GN(gitgraph &g);
@@ -32,6 +34,9 @@ public:
 	bool Gn_betweenness();
 	double Gn_modularity();
 };
+
+//Convert directed git graph to undirected GN graph
+//Graph generated,should followed with check_connectivity
 
 GN::GN(gitgraph &g)
 {
@@ -72,9 +77,15 @@ GN::GN(gitgraph &g)
 
 }
 
+//Ensuring that the graph is a undirected graph
+//OK return true else false
+
 bool GN::check_connectivity()
 {
+	int total = 0;
+	//cout << "Vertex amount" << G.size() << endl;
 	for (int i = 0; i < G.size(); i++) {
+		total += G[i].size();
 		for (vector<edge>::iterator it = G[i].begin(); it != G[i].end(); it++) {
 			assert(it->v1 == i);
 			int v2 = it->v2,v1=it->v1;
@@ -100,13 +111,19 @@ bool GN::Gn_main()
 	Best_Q.Q = 0;
 	size_t max_cmty = G.size(),cmty=1,new_cmty;
 	//until every node is a unique community
+	cout << "Init components :"<< connected_component() << endl;
+	cmty = connected_component();
+//	for (map<string, int>::iterator it = mapper.begin();it != mapper.end();it++)
+	//	cout << it->first << "-" << it->second<<endl;
 	if (check_connectivity())	cout << "ok" << endl;
 	while (cmty < max_cmty){
 		Gn_betweenness();
-		cout << delete_max_betweeness() << endl;;
+		cout << delete_max_betweeness()<<endl;
 		new_cmty = connected_component();
-		if (new_cmty < cmty)
-			Gn_modularity();
+		if (new_cmty > cmty){
+			cout<<Gn_modularity()<<endl;
+			cmty = new_cmty;
+		}
 	}
 	return true;
 }
@@ -130,9 +147,10 @@ __declspec(noinline) double GN::delete_max_betweeness()
 	max_node->deleted = true;
 	int v2 = max_node->v2;
 	for (vector<edge>::iterator it = G[v2].begin(); it != G[v2].end(); it++) {
-		if (it->v2 == max_node->v1&&it->v2 == v2)
+		if (it->v2 == max_node->v1&&it->v1 == v2)
 			it->deleted = true;
 	}
+	cout << "Del:" << max_node->v1 << "-" << max_node->v2 << endl;
 	return max_node->betweenness;
 }
 
@@ -142,18 +160,46 @@ __declspec(noinline) double GN::delete_max_betweeness()
 
 int GN::connected_component()
 {
+	int sum=0;
 	DJ_set.clear();
 	for (int i = 0; i < G.size(); i++)
 		DJ_set.push_back(i);
 	for (int i = 0; i < G.size(); i++) {
 		for (vector<edge>::iterator it = G[i].begin(); it != G[i].end(); it++) {
-			DJ_set[it->v2] = DJ_set[i];
+			if (it->deleted)	continue;
+			//Disjoint set's merge step
+			int f1 = connected_component_getf(it->v1);
+			int f2 = connected_component_getf(it->v2);
+			if (f1 != f2)	DJ_set[f2] = f1;
 		}
 	}
-	set<int> com;
-	for (int i = 0; i < G.size(); i++)
-		com.insert(DJ_set[i]);
-	return com.size();
+	for (int i = 0; i < G.size(); i++) {
+		//To ensure nodes in the same community point to the same father
+		DJ_set[i] = connected_component_getf(DJ_set[i]);
+		if (DJ_set[i] == i)
+			sum++;
+	}
+	return sum;
+}
+
+
+//Dsjoint set proccess to find father
+
+int GN::connected_component_getf(int v)
+{
+	if (DJ_set[v] == v)	return v;
+	else return DJ_set[v] = connected_component_getf(DJ_set[v]);
+}
+
+
+bool GN::betweeness_init() 
+{
+	for (int i = 0;i < G.size();i++) {
+		for (vector<edge>::iterator it = G[i].begin();it != G[i].end();it++) {
+			it->betweenness = 0;
+		}
+	}
+	return true;
 }
 
 
@@ -161,26 +207,25 @@ int GN::connected_component()
 
 bool GN::Gn_betweenness()
 {
+	betweeness_init();
+	int total = 0;
 	for (int i = 0; i < G.size(); i++) {
 		vector<edge> &N = G[i];
 
 		int next_node,cur_node = i;
 		//map graph index to bfs_cache node index
-		map<int, int> mapper;
+		map<int, int> mapper_n;
 		//store graph node in BFS order bfs[i][0] store Distace S bfs[i][1] store num of shortest path
 		vector<vector<int> > bfs_cache;
-		queue<int> bfs_q;
+		vector<int> bfs_q;
 		
 		//push to both BFS vector and BFS queue
 		bfs_cache.push_back(vector<int>(2, 1));
-		mapper[cur_node] = bfs_cache.size()-1;
-		bfs_q.push(cur_node);
-			
-		while (!bfs_q.empty()) {
-			int next_index,cur_index = mapper[cur_node];
-			cur_node = bfs_q.front();
-			bfs_q.pop();
-			
+		mapper_n[cur_node] = bfs_cache.size()-1;
+		bfs_q.push_back(cur_node);
+		for (int bfs_p=0; bfs_p < bfs_q.size(); bfs_p++) {
+			cur_node = bfs_q[bfs_p];
+			int next_index,cur_index = mapper_n[cur_node];
 			bool flag=true;
 
 			//For every edge of cur_node BFS add
@@ -188,8 +233,8 @@ bool GN::Gn_betweenness()
 				//Always remember to see whether the edge has been deleted	
 				if (it->deleted)	continue;
 				next_node = it->v2;
-				if (mapper.count(next_node)) {
-					next_index = mapper[next_node];
+				if (mapper_n.count(next_node)) {
+					next_index = mapper_n[next_node];
 					//if met with possiblities of shortest path
 					if(bfs_cache[cur_index][0]==bfs_cache[next_index][0]+1){
 						flag = false;
@@ -204,36 +249,49 @@ bool GN::Gn_betweenness()
 					tmp.push_back(0);
 					//push to both BFS vector and BFS queue
 					bfs_cache.push_back(tmp);
-					mapper[next_node] = bfs_cache.size() - 1;
-					bfs_q.push(next_node);
+					mapper_n[next_node] = bfs_cache.size() - 1;
+					bfs_q.push_back(next_node);
 				}
 			}
-			if (flag) {
-				cout << cur_node << endl;
+			//Code module to detect error
+			if (flag&&cur_node!=i) {
+				cout << "node:"<<cur_node <<"curindex:"<<cur_index<< endl;
 				system("pause");
 			}
 		}
 
-		//count part
+		//count part,bet correspond with bfs_cache's position
 		vector<double> bet(bfs_cache.size(),0);
 		for (int j = bfs_cache.size() - 1; j >= 0; j--) {
 			int w = bfs_cache[j][1];
-		//	cout << bet[j] << ":" << w << endl;
+		//	cout <<"W:" <<w << endl;
 			bet[j]++;
 			for (int it = 2; it<bfs_cache[j].size(); it++) {
 				bet[bfs_cache[j][it]] += 1.0 / w * bet[j];
 			}
 		}
-		cout << bet.size() << endl;
-		for (vector<edge>::iterator it = G[cur_node].begin(); it != G[cur_node].end(); it++)
-		{
-			if (it->deleted)	continue;
-			//Weighted GN betweeness
-			it->betweenness = bet[mapper[it->v2]]/it->weight;
-		//	cout << mapper[it->v2]<<" "<<bet[mapper[it->v2]] << endl;
+
+		//cout << bfs_q.size() << endl;
+		//Sum and save part
+		for (int j = 0;j < G.size(); j++) {
+			for (vector<edge>::iterator it = G[j].begin();it != G[j].end();it++) {
+				if (it->deleted)	continue;
+				int node1 = it->v1, node2 = it->v2;
+				int index1 = mapper_n[node1], index2 = mapper_n[node2];
+				if (bfs_cache[index1][0] == bfs_cache[index2][0] + 1)
+					it->betweenness += bet[index1] / it->weight;
+				else if (bfs_cache[index1][0] == bfs_cache[index2][0] - 1)
+					it->betweenness += bet[index2] / it->weight;
+			}
 		}
-		system("pause");
 	}
+	
+	/*for (int i = 0;i < G.size();i++) {
+		for (vector<edge>::iterator it = G[i].begin();it != G[i].end();it++) {
+			cout << it->v1 << "-" << it->v2 << ":" << it->betweenness<<endl;
+		}
+	}*/
+	//cout << "Total" << total;
 	return true;
 }
 
@@ -247,6 +305,8 @@ double GN::Gn_modularity()
 	for (int i=0; i < G.size(); i++) {
 		double tmp = 0;
 		for (vector<edge>::iterator it = G[i].begin(); it != G[i].end(); it++) {
+			//probably no need to ignore deletedfile
+			//if (it->deleted)	continue;
 			tmp += it->weight;
 		}
 		K.push_back(tmp);
@@ -255,15 +315,32 @@ double GN::Gn_modularity()
 
 	M = M / 2;
 	double sum=0;
-	for (int i=0; i < G.size(); i++) {
-		for (vector<edge>::iterator it = G[i].begin(); it != G[i].end(); it++) {
-			if (it->deleted)	continue;
-			// if does not belong to the same community
-			if (DJ_set[it->v1] != DJ_set[it->v2])	continue;
-			sum += it->weight - K[it->v1]*K[it->v2]/(2*M);
+	int gsize = G.size();
+	vector<vector<double> > matrix(G.size(),vector<double>(G.size(),0));
+
+	for (int i = 0;i < G.size();i++) {
+		for (vector<edge>::iterator it = G[i].begin();it != G[i].end();it++) {
+			//if (it->deleted)	continue;
+			matrix[it->v1][it->v2] = it->weight;
 		}
 	}
-	sum = sum / (2 * M);
+	for(int i = 0;i < G.size();i++)
+		for (int j = 0;j < G.size();j++) {
+			matrix[i][j] -= K[i] * K[j] / (2 * M);
+			if (DJ_set[i] == DJ_set[j])
+				sum += matrix[i][j];
+			else
+				sum -= matrix[i][j];
+		}
+	//for (int i=0; i < g.size(); i++) {
+	//	for (vector<edge>::iterator it = g[i].begin(); it != g[i].end(); it++) {
+	//		if (it->deleted)	continue;
+	//		// if does not belong to the same community
+	//		if (dj_set[it->v1] != dj_set[it->v2])	continue;
+	//		sum += it->weight - k[it->v1]*k[it->v2]/(2*m);
+	//	}
+	//}
+	sum = sum / (4 * M);
 	if (sum > Best_Q.Q)
 	{
 		Best_Q.Q = sum;
