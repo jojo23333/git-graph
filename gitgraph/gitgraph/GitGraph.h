@@ -51,6 +51,7 @@ public:
 		rank = 1;
 	}
 	GitUser() {
+		rank = 1;
 	}
 };
 

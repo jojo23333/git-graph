@@ -15,7 +15,9 @@ int main()
 	else	cout << "error" << endl;
 	PageRank pr(G);
 	pr.simple_pr();
+	pr.out_put_rank();
 	pr.map_reduce_pr();
+	pr.out_put_rank();
 	//GN com(G);
 	//cout << "GN algorithm start" << endl;
 	//com.Gn_main();

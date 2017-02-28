@@ -17,6 +17,7 @@ public:
 	int max_iterations;
 	bool simple_pr();
 	bool map_reduce_pr();
+	bool out_put_rank();
 
 public:
 	PageRank(gitgraph &g);
@@ -125,4 +126,15 @@ bool PageRank::map_reduce_pr()
 		}
 		if (change<min_delta)	break;
 	}
+}
+
+
+//Method to print all the pr value to screen
+
+bool PageRank::out_put_rank()
+{
+	for (map<string, double>::iterator it = val.begin();it != val.end();it++) {
+		cout << it->first << " : " << it->second<< endl;
+	}
+	return true;
 }
