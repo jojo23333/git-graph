@@ -113,6 +113,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="FastUnfolding.h" />
     <ClInclude Include="GitGraph.h" />
     <ClInclude Include="GN.h" />
     <ClInclude Include="MysqlApi.h" />

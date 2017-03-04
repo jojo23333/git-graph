@@ -1,9 +1,5 @@
 // Functions to read a network stored in a GML file into a NETWORK struct
 //
-// Mark Newman  11 AUG 06
-//
-// To use this software, #include "readgml.h" at the head of your program
-// and then call the following.
 //
 // Function calls:
 //   int read_network(NETWORK *network, FILE *stream)

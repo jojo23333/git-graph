@@ -33,6 +33,9 @@
     <ClInclude Include="readgml.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FastUnfolding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphAnalyse.cpp">

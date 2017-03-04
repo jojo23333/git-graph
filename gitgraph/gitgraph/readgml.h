@@ -1,6 +1,5 @@
 // Header file for the parser for GML files
 //
-// Mark Newman  11 AUG 06
 
 #ifndef _READGML_H
 #define _READGML_H

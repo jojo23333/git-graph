@@ -5,6 +5,7 @@
 class GN {
 	//erver node is mapped to an intager id
 	map<string, int> mapper;
+	map<int, string> reverse_mapper;
 	//flags record wheather the edge has been deleted
 	struct edge {
 	//v1 represent self v2 adjacent
@@ -28,6 +29,8 @@ class GN {
 	int connected_component_getf(int v);
 	bool betweeness_init();
 	bool check_connectivity();
+
+
 public:
 	GN(gitgraph &g);
 	bool Gn_main();
@@ -44,6 +47,7 @@ GN::GN(gitgraph &g)
 	int size = 0;
 	for (map<string, GitUser>::iterator it = g.index.begin(); it != g.index.end(); it++) {
 		mapper[it->first] = size;
+		reverse_mapper[size] = it->first;
 		size++;
 	}
 
