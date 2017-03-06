@@ -193,7 +193,7 @@ namespace FastUnfolding {
 			for (int q = 0; q < c.members.size() ;q++) {
 				old_to_new[c.members[q]] = i;
 			}
-			cout << c.sum_in << "-" << c.sum_tot << endl;
+			//cout << c.sum_in << "-" << c.sum_tot << endl;
 			temp.sum_in = c.sum_in;
 			temp.sum_tot = c.sum_tot;
 			cmty.push_back(temp);
@@ -290,7 +290,33 @@ namespace FastUnfolding {
 		FastUnfolding(gitgraph &g);
 		double modularity;
 		void   fast_unfolding_main();
+		void print_best_partition();
 	};
+
+	void FastUnfolding::print_best_partition()
+	{
+		int max_p = 0;
+		double max_q = 0;
+		for (int i = 0;i < partitions.size();i++)
+		{
+			if (partitions[i].modularity > max_q) {
+				max_p = i;
+			}
+		}
+		set<int> a;
+		for (int i = 0;i < partitions[max_p].cmty.size();i++) {
+			a.insert(partitions[max_p].cmty[i]);
+		}
+		cout << "Community numbers:" << a.size() << endl;
+		for (int i=0;i < a.size();i++) {
+			cout << "Community NO." << i<<" ";
+			for (int j=0;j < partitions[max_p].cmty.size();j++) {
+				if (partitions[max_p].cmty[j] == i)
+					cout <<" " <<j ;
+			}
+			cout << endl;
+		}
+	}
 
 
 	void FastUnfolding::fast_unfolding_main()
@@ -309,7 +335,7 @@ namespace FastUnfolding {
 			it = temp;
 			temp.clear();
 			temp.aggregate_from_previous(it, partition);
-			cout << temp.modularity() << endl;
+//			cout << temp.modularity() << endl;
 			partitions.push_back(Partition(partition, temp.modularity()));
 			if (temp.G.size() <= 1)	break;
 		}

@@ -36,7 +36,29 @@ public:
 	bool Gn_main();
 	bool Gn_betweenness();
 	double Gn_modularity();
+	void print_partition();
 };
+
+void GN::print_partition()
+{
+	vector<bool> flag(Best_Q.community.size(), false);
+	int cmty_num=0;
+	for (int j = 0;j < Best_Q.community.size();j++) {
+		int cmty = Best_Q.community[j];
+		if (flag[j]) continue;
+		cout << "Community NO." << cmty_num << ":"<<endl;
+		for (int i = j + 1;i < Best_Q.community.size();i++) {
+			if (flag[i])	continue;
+			if (Best_Q.community[i] == cmty) {
+				cout << " " << i;
+				flag[i] = true;
+			}
+		}
+		cmty_num++;
+		cout << endl;
+	}
+}
+
 
 //Convert directed git graph to undirected GN graph
 //Graph generated,should followed with check_connectivity
@@ -115,17 +137,17 @@ bool GN::Gn_main()
 	Best_Q.Q = 0;
 	size_t max_cmty = G.size(),cmty=1,new_cmty;
 	//until every node is a unique community
-	cout << "Init components :"<< connected_component() << endl;
+	//cout << "Init components :"<< connected_component() << endl;
 	cmty = connected_component();
 //	for (map<string, int>::iterator it = mapper.begin();it != mapper.end();it++)
 	//	cout << it->first << "-" << it->second<<endl;
 	if (check_connectivity())	cout << "ok" << endl;
 	while (cmty < max_cmty){
 		Gn_betweenness();
-		cout << delete_max_betweeness()<<endl;
+		delete_max_betweeness();
 		new_cmty = connected_component();
 		if (new_cmty > cmty){
-			cout<<Gn_modularity()<<endl;
+			Gn_modularity();
 			cmty = new_cmty;
 		}
 	}
@@ -154,7 +176,7 @@ __declspec(noinline) double GN::delete_max_betweeness()
 		if (it->v2 == max_node->v1&&it->v1 == v2)
 			it->deleted = true;
 	}
-	cout << "Del:" << max_node->v1 << "-" << max_node->v2 << endl;
+	//cout << "Del:" << max_node->v1 << "-" << max_node->v2 << endl;
 	return max_node->betweenness;
 }
 

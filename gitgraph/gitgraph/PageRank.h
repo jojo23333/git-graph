@@ -133,8 +133,12 @@ bool PageRank::map_reduce_pr()
 
 bool PageRank::out_put_rank()
 {
+	map<double, string> r;
 	for (map<string, double>::iterator it = val.begin();it != val.end();it++) {
-		cout << it->first << " : " << it->second<< endl;
+		r[it->second] = it->first;
+	}
+	for (map<double, string>::iterator it = r.begin();it != r.end();it++) {
+		cout << it->second << " : " << it->first << endl;
 	}
 	return true;
 }
