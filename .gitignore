@@ -4,7 +4,6 @@
 /script/test.py
 .token
 *.dev
-*.gml
 *.win
 
 # Created by https://www.gitignore.io/api/c++,python,visualstudio
